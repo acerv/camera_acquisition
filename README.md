@@ -67,7 +67,7 @@ v4l2-ctl tools, the supported resolutions and format are the following:
 
 ## Userful Links
 
-http://www.theimagingsource.com/en_US/products/cameras/usb-ccd-color/dfk72buc02/
-http://linuxtv.org/downloads/v4l-dvb-apis/buffer.html#v4l2-buffer
-http://linuxtv.org/downloads/v4l-dvb-apis/mmap.html
-https://github.com/torvalds/linux/blob/master/include/uapi/linux/videodev2.h
+* http://www.theimagingsource.com/en_US/products/cameras/usb-ccd-color/dfk72buc02/
+* http://linuxtv.org/downloads/v4l-dvb-apis/buffer.html#v4l2-buffer
+* http://linuxtv.org/downloads/v4l-dvb-apis/mmap.html
+* https://github.com/torvalds/linux/blob/master/include/uapi/linux/videodev2.h
