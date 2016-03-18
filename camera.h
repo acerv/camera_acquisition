@@ -20,7 +20,8 @@ enum {
     CAMERA_FMT_JMPEG = 0,
     CAMERA_FMT_GREYSCALE,
     CAMERA_FMT_YUYV,
-    CAMERA_FMT_UYVY
+    CAMERA_FMT_UYVY,
+    CAMERA_FMT_RGB32
 };
 
 // error codes

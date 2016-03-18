@@ -15,18 +15,20 @@
 #include <errno.h>
 
 #define DEFAULT_VIDEO "/dev/video0"
+#define DEFAULT_FORMAT CAMERA_FMT_RGB32
 #define DEFAULT_NUM_OF_FRAMES 5
-#define DEFAULT_FORMAT CAMERA_FMT_YUYV
 #define DEFAULT_WIDTH 1024
 #define DEFAULT_HEIGHT 768
 
-static const char short_options[] = "d:hc:f:";
+static const char short_options[] = "d:hf:c:w:v:";
 static const struct option 
 long_options[] = {
     { "device", required_argument,  NULL,   'd' },
     { "help",   no_argument,        NULL,   'h' },
     { "format", no_argument,        NULL,   'f' },
     { "counts", no_argument,        NULL,   'c' },
+    { "width",  no_argument,        NULL,   'w' },
+    { "height", no_argument,        NULL,   'v' },
     { 0, 0, 0, 0 }
 };
 
@@ -35,14 +37,18 @@ static void usage(char **argv)
     printf("Usage: %s [options]\n\n"
            "Version 1.0\n"
            "Options:\n"
-           "-d | --device name   Video device name [default: %s]\n"
            "-h | --help          Print this message\n"
-           "-f | --format name   The acquisition format uyvy, yuyv, jmpeg, grey [default: %s]\n"
-           "-c | --counts num    The number of frames to acquire [default: %d]\n\n",
+           "-d | --device name   Video device name [default: %s]\n"
+           "-f | --format name   The acquisition format rgb32, uyvy, yuyv, jmpeg, grey [default: %s]\n"
+           "-c | --counts num    The number of frames to acquire [default: %d]\n\n"
+           "-w | --width  num    The horizontal resolution [default: %d]\n\n"
+           "-v | --height num    The vertical resolution [default: %d]\n\n",
            argv[0], 
            DEFAULT_VIDEO, 
-           "yuyv",
-           DEFAULT_NUM_OF_FRAMES);
+           "rgb32",
+           DEFAULT_NUM_OF_FRAMES,
+           DEFAULT_WIDTH,
+           DEFAULT_HEIGHT);
 }
 
 int main(int argc, char* argv[])
@@ -90,6 +96,8 @@ int main(int argc, char* argv[])
                     params.format = CAMERA_FMT_YUYV;
                 } else if (strcmp(optarg, "uyvy") == 0) {
                     params.format = CAMERA_FMT_UYVY;
+                } else if (strcmp(optarg, "rgb32") == 0) {
+                    params.format = CAMERA_FMT_RGB32;
                 } else {
                     params.format = DEFAULT_FORMAT;
                 }
@@ -103,6 +111,28 @@ int main(int argc, char* argv[])
                 }
                 if (params.frames <= 0) {
                     params.frames = DEFAULT_NUM_OF_FRAMES;
+                }
+                break;
+            case 'w':
+                errno = 0;
+                params.width = (int)strtol(optarg, NULL, 0);
+                if (errno) {
+                    perror("Horizontal resolution");
+                    exit(1);
+                }
+                if (params.width <= 0) {
+                    params.width = DEFAULT_WIDTH;
+                }
+                break;
+            case 'v':
+                errno = 0;
+                params.height = (int)strtol(optarg, NULL, 0);
+                if (errno) {
+                    perror("Vertical resolution");
+                    exit(1);
+                }
+                if (params.height <= 0) {
+                    params.height = DEFAULT_HEIGHT;
                 }
                 break;
             default:
@@ -135,7 +165,11 @@ int main(int argc, char* argv[])
         }
 
         for (i = 0; i < num_of_frames; i++) {
-            printf("Acquired frame %d (%dbytes)\n", i, frames[i].length);
+            printf("Frame %d: %dx%d %dbytes\n", 
+                i, 
+                params.width, 
+                params.height, 
+                frames[i].length);
         }
         printf("\n");
         camera_free(&dev);

@@ -199,6 +199,9 @@ camera_device* camera_new(struct devparams* params)
         case CAMERA_FMT_UYVY:
             dev->format.fmt.pix.pixelformat = V4L2_PIX_FMT_UYVY;
             break;
+        case CAMERA_FMT_RGB32:
+            dev->format.fmt.pix.pixelformat = V4L2_PIX_FMT_RGB32;
+            break;
         case CAMERA_FMT_GREYSCALE:
         default:
             dev->format.fmt.pix.pixelformat = V4L2_PIX_FMT_GREY;
