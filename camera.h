@@ -25,8 +25,10 @@ enum {
 
 // error codes
 enum {
+    CAMERA_NO_ERROR = 0,
     CAMERA_ERR_DATA_CORRUPTED = -1000,
     CAMERA_ERR_TIMEOUT,
+    CAMERA_ERR_MEMORY_HANDLE
 };
 
 // this routine prints the camera informations

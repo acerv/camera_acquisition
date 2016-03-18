@@ -121,12 +121,17 @@ int main(int argc, char* argv[])
         camera_get_frame_pointer(dev, &frames, &num_of_frames);
 
         ret = camera_acquire_frames(dev);
-        if (ret == CAMERA_ERR_DATA_CORRUPTED) {
-            fprintf(stderr, "Camera data might be corrupted\n");
-            exit(1);
-        } else if (ret == CAMERA_ERR_TIMEOUT) {
-            fprintf(stderr, "Camera acquisition timeout\n");
-            exit(1);
+        if (ret != CAMERA_NO_ERROR) {
+            if (ret == CAMERA_ERR_DATA_CORRUPTED) {
+                fprintf(stderr, "Camera data might be corrupted\n");
+                exit(1);
+            } else if (ret == CAMERA_ERR_TIMEOUT) {
+                fprintf(stderr, "Camera acquisition timeout\n");
+                exit(1);
+            } else if (ret == CAMERA_ERR_MEMORY_HANDLE) {
+                fprintf(stderr, "Camera memory handling error\n");
+                exit(1);
+            }
         }
 
         for (i = 0; i < num_of_frames; i++) {

@@ -144,7 +144,7 @@ camera_device* camera_new(struct devparams* params)
     fd = open(params->devstr, O_RDWR);
     if (fd == -1) {
         perror("Opening camera");
-        goto ret_statement;
+        goto cleanup;
     }
 
     if (params->frames <= 0) {
@@ -158,17 +158,17 @@ camera_device* camera_new(struct devparams* params)
     // read camera capabilities
     if (xioctl(fd, VIDIOC_QUERYCAP, &(dev->caps)) == -1) {
         perror("Reading capabilities");
-        goto ret_statement;
+        goto cleanup;
     }
 
     if (!(dev->caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
         fprintf(stderr, "%s is not a capture device\n", params->devstr);
-        goto ret_statement;
+        goto cleanup;
     }
 
     if (!(dev->caps.capabilities & V4L2_CAP_STREAMING)) {
         fprintf(stderr, "mmap method not supported for this device\n");
-        goto ret_statement;
+        goto cleanup;
     }
         
     // TODO: read the supported camera formats from device
@@ -180,7 +180,7 @@ camera_device* camera_new(struct devparams* params)
 
     if (xioctl(fd, VIDIOC_CROPCAP, &(dev->cropcap)) == -1) {
         perror("Reading cropping capabilities");
-        goto ret_statement;
+        goto cleanup;
     }
         
     // setup the default acquisition format
@@ -207,7 +207,7 @@ camera_device* camera_new(struct devparams* params)
    
     if (xioctl(fd, VIDIOC_S_FMT, &(dev->format)) == -1) {
         perror("Setting up format");
-        goto ret_statement;
+        goto cleanup;
     }
 
     // request the buffer
@@ -217,12 +217,12 @@ camera_device* camera_new(struct devparams* params)
 
     if (xioctl(fd, VIDIOC_REQBUFS, &request) == -1) {
         perror("Requesting buffer");
-        goto ret_statement;
+        goto cleanup;
     }
 
     if (request.count < (size_t)params->frames) {
         fprintf(stderr, "Can't acquire %d frames\n", params->frames);
-        goto ret_statement;
+        goto cleanup;
     }
 
     // reserve physical memory on buffers
@@ -239,7 +239,7 @@ camera_device* camera_new(struct devparams* params)
 
         if (xioctl(fd, VIDIOC_QUERYBUF, &(buffers[i])) == -1) {
             perror("Reserving buffer");
-            goto ret_statement;
+            goto cleanup;
         }
 
         // map camera buffer. At this point, the device memory
@@ -262,10 +262,21 @@ camera_device* camera_new(struct devparams* params)
     // start frames acquisition
     if (xioctl(dev->file_desc, VIDIOC_STREAMON, &dev->type) == -1) {
         perror("Starting capture");
-        goto ret_statement;
+        goto cleanup;
     }
 
-ret_statement:
+    // release buffers memory
+    free(buffers);
+
+    return dev;
+
+cleanup:
+    if (buffers) {
+        free(buffers);
+    }
+    
+    camera_free(&dev);
+
     return dev;
 }
 
@@ -276,18 +287,29 @@ void camera_free(camera_device** device)
 
     if (device) {
         dev = *device;
-
-        if (xioctl(dev->file_desc, VIDIOC_STREAMOFF, &dev->type) == -1) {
-            perror("Closing stream");
-        }
-
-        if (dev && dev->file_desc != -1) {
-            close(dev->file_desc);
-
-            for (i = 0; i < dev->num_of_frames; i++) {
-                if (dev->frames && dev->frames[i].start) {
-                    munmap(dev->frames[i].start, dev->frames[i].length);
+        if (dev) {
+            // close the device
+            if (dev->file_desc != 1) {
+                if (xioctl(dev->file_desc, VIDIOC_STREAMOFF, &dev->type) == -1) {
+                    perror("Closing stream");
                 }
+                close(dev->file_desc);
+            }
+
+            // unmap frames memory
+            if (dev->frames) {
+                for (i = 0; i < dev->num_of_frames; i++) {
+                    if (dev->frames[i].start) {
+                        munmap(dev->frames[i].start, dev->frames[i].length);
+                    }
+                }
+
+                free(dev->frames);
+            }
+     
+            // free buffers
+            if (dev->buffers) {
+                free(dev->buffers);
             }
 
             free(dev);
@@ -307,7 +329,7 @@ void camera_get_frame_pointer(camera_device* dev, frame_t** frames_ptr, int* num
 
 int camera_acquire_frames(camera_device* dev)
 {
-    int ret = 0;
+    int ret = CAMERA_NO_ERROR;
     int i = 0;
     fd_set fds;
     if (dev == NULL) {
@@ -322,6 +344,7 @@ int camera_acquire_frames(camera_device* dev)
 
         if (xioctl(dev->file_desc, VIDIOC_QBUF, &(dev->buffers[i])) == -1) {
             perror("Querying buffer");
+            ret = CAMERA_ERR_MEMORY_HANDLE;
             goto ret_statement;
         }
     }
@@ -346,6 +369,7 @@ int camera_acquire_frames(camera_device* dev)
 
         if (xioctl(dev->file_desc, VIDIOC_DQBUF, &(dev->buffers[i])) == -1) {
             perror("Retrieving frame");
+            ret = CAMERA_ERR_MEMORY_HANDLE;
             goto ret_statement;
         }
     }
