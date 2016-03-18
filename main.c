@@ -40,9 +40,10 @@ static void usage(char **argv)
            "-h | --help          Print this message\n"
            "-d | --device name   Video device name [default: %s]\n"
            "-f | --format name   The acquisition format rgb32, uyvy, yuyv, jmpeg, grey [default: %s]\n"
-           "-c | --counts num    The number of frames to acquire [default: %d]\n\n"
-           "-w | --width  num    The horizontal resolution [default: %d]\n\n"
-           "-v | --height num    The vertical resolution [default: %d]\n\n",
+           "-c | --counts num    The number of frames to acquire [default: %d]\n"
+           "-w | --width  num    The horizontal resolution [default: %d]\n"
+           "-v | --height num    The vertical resolution [default: %d]\n"
+           "\n",
            argv[0], 
            DEFAULT_VIDEO, 
            "rgb32",

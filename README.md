@@ -13,10 +13,12 @@ Usage: ./tester [options]
 
 Version 1.0
 Options:
--d | --device name   Video device name [default: /dev/video0]
 -h | --help          Print this message
--f | --format name   The acquisition format uyvy, yuyv, jmpeg, grey [default: yuyv]
+-d | --device name   Video device name [default: /dev/video0]
+-f | --format name   The acquisition format rgb32, uyvy, yuyv, jmpeg, grey [default: rgb32]
 -c | --counts num    The number of frames to acquire [default: 5]
+-w | --width  num    The horizontal resolution [default: 1024]
+-v | --height num    The vertical resolution [default: 768]
 ```
 
 ## Tests in Linux
@@ -25,6 +27,8 @@ The Imaging Source DFK72BUC02 camera has been tested with the Raspberry Pi 3 dev
 v4l2-ctl tools, the supported resolutions and format are the following:
 * Resolutions:  1296x1944, 1024x768
 * Formats:      UYVY, YUYV
+
+This is weird, since it's possible to acquire RGB32 data with 2592x1944 resolution.. 
 
 ## Introduction to the Video4Linux2 library
 ### From v4l2 documentation (Streaming I/O Memory Mapping chap.3 documentation):
