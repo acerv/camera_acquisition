@@ -56,7 +56,7 @@ void camera_print_informations(const char* devstr)
     struct v4l2_cropcap         cropcap = {0};
     int fd = -1;
 
-    if (devstr) {
+    if (devstr != NULL) {
         fd = open(devstr, O_RDWR);
         if (fd == -1) {
             perror("Opening camera");
@@ -274,10 +274,7 @@ camera_device* camera_new(struct devparams* params)
     return dev;
 
 cleanup:
-    if (buffers) {
-        free(buffers);
-    }
-    
+    free(buffers);
     camera_free(&dev);
 
     return dev;
@@ -288,43 +285,41 @@ void camera_free(camera_device** device)
     camera_device* dev = NULL;
     int i = 0;
 
-    if (device) {
-        dev = *device;
-        if (dev) {
-            // close the device
-            if (dev->file_desc != 1) {
-                if (xioctl(dev->file_desc, VIDIOC_STREAMOFF, &dev->type) == -1) {
-                    perror("Closing stream");
-                }
-                close(dev->file_desc);
-            }
-
-            // unmap frames memory
-            if (dev->frames) {
-                for (i = 0; i < dev->num_of_frames; i++) {
-                    if (dev->frames[i].start) {
-                        munmap(dev->frames[i].start, dev->frames[i].length);
-                    }
-                }
-
-                free(dev->frames);
-            }
-     
-            // free buffers
-            if (dev->buffers) {
-                free(dev->buffers);
-            }
-
-            free(dev);
-        }
+    if (device == NULL || (*device) == NULL) {
+        return;
     }
+
+    dev = *device;
+
+    // close the device
+    if (dev->file_desc != -1) {
+        if (xioctl(dev->file_desc, VIDIOC_STREAMOFF, &dev->type) == -1) {
+            perror("Closing stream");
+        }
+        close(dev->file_desc);
+    }
+
+    // unmap frames memory
+    if (dev->frames != NULL) {
+        for (i = 0; i < dev->num_of_frames; i++) {
+            if (dev->frames[i].start != NULL) {
+                munmap(dev->frames[i].start, dev->frames[i].length);
+            }
+        }
+
+        free(dev->frames);
+    }
+     
+    // free buffers
+    free(dev->buffers);
+    free(dev);
 
     device = NULL;
 }
 
 void camera_get_frame_pointer(camera_device* dev, frame_t** frames_ptr, int* num_of_frames)
 {
-    if (dev) {
+    if (dev != NULL) {
         *frames_ptr = dev->frames;
         *num_of_frames = dev->num_of_frames;
     }
@@ -335,8 +330,8 @@ int camera_acquire_frames(camera_device* dev)
     int ret = CAMERA_NO_ERROR;
     int i = 0;
     fd_set fds;
-    if (dev == NULL) {
-        return 0;
+    if (!dev) {
+        return ret;
     }
    
     // add buffers in the input queue

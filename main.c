@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 
     dev = camera_new(&params);
 
-    if (dev) {
+    if (dev != NULL) {
         camera_get_frame_pointer(dev, &frames, &num_of_frames);
 
         ret = camera_acquire_frames(dev);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
         }
 
         for (i = 0; i < num_of_frames; i++) {
-            printf("Frame %d: %dx%d %dbytes\n", 
+            printf("Frame %d: %dx%d %zubytes\n", 
                 i, 
                 params.width, 
                 params.height, 
