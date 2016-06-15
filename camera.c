@@ -56,70 +56,72 @@ void camera_print_informations(const char* devstr)
     struct v4l2_cropcap         cropcap = {0};
     int fd = -1;
 
-    if (devstr != NULL) {
-        fd = open(devstr, O_RDWR);
-        if (fd == -1) {
-            perror("Opening camera");
-            goto ret_statement;
-        }
-        
-        // read camera capabilities
-        if (xioctl(fd, VIDIOC_QUERYCAP, &caps) == -1) {
-            perror("Reading camera query capabilities");
-            goto ret_statement;
-        }
-
-        if (!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-            fprintf(stderr, "%s is not a capture device\n", devstr);
-            goto ret_statement;
-        }
-
-        printf("\nDriver caps:\n"
-               " Driver:\t\"%s\"\n"
-               " Card:\t\t\"%s\"\n"
-               " Bus:\t\t\"%s\"\n"
-               " Version:\t\"%d.%d\"\n",
-               caps.driver,
-               caps.card,
-               caps.bus_info,
-               (caps.version>>16)&&0xff,
-               (caps.version>>24)&&0xff);
-        
-        if (caps.capabilities & V4L2_CAP_READWRITE) {
-            printf(" Read I/O:\tSupported\n");
-        } else {
-            printf(" Read I/O:\tNot supported\n");
-        }
-
-        if (caps.capabilities & V4L2_CAP_STREAMING) {
-            printf(" Streaming:\tSupported\n");
-        } else {
-            printf(" Streaming:\tNot supported\n");
-        }
-
-        // read the cropping capabilities
-        cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;;
-
-        if (xioctl(fd, VIDIOC_CROPCAP, &cropcap) == -1) {
-            perror("Reading camera cropping capabilities");
-            goto ret_statement;
-        }
-
-        printf("\nCamera cropping:\n"
-           " Bounds:\t%dx%d+%d+%d\n"
-           " Default:\t%dx%d+%d+%d\n"
-           " Aspect:\t%d/%d\n",
-           cropcap.bounds.width,
-           cropcap.bounds.height,
-           cropcap.bounds.left,
-           cropcap.bounds.top,
-           cropcap.defrect.width,
-           cropcap.defrect.height,
-           cropcap.defrect.left,
-           cropcap.defrect.top,
-           cropcap.pixelaspect.numerator,
-           cropcap.pixelaspect.denominator);
+    if (devstr == NULL) {
+        goto ret_statement;
     }
+
+    fd = open(devstr, O_RDWR);
+    if (fd == -1) {
+        perror("Opening camera");
+        goto ret_statement;
+    }
+    
+    // read camera capabilities
+    if (xioctl(fd, VIDIOC_QUERYCAP, &caps) == -1) {
+        perror("Reading camera query capabilities");
+        goto ret_statement;
+    }
+
+    if (!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+        fprintf(stderr, "%s is not a capture device\n", devstr);
+        goto ret_statement;
+    }
+
+    printf("\nDriver caps:\n"
+           " Driver:\t\"%s\"\n"
+           " Card:\t\t\"%s\"\n"
+           " Bus:\t\t\"%s\"\n"
+           " Version:\t\"%d.%d\"\n",
+           caps.driver,
+           caps.card,
+           caps.bus_info,
+           (caps.version>>16)&&0xff,
+           (caps.version>>24)&&0xff);
+    
+    if (caps.capabilities & V4L2_CAP_READWRITE) {
+        printf(" Read I/O:\tSupported\n");
+    } else {
+        printf(" Read I/O:\tNot supported\n");
+    }
+
+    if (caps.capabilities & V4L2_CAP_STREAMING) {
+        printf(" Streaming:\tSupported\n");
+    } else {
+        printf(" Streaming:\tNot supported\n");
+    }
+
+    // read the cropping capabilities
+    cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;;
+
+    if (xioctl(fd, VIDIOC_CROPCAP, &cropcap) == -1) {
+        perror("Reading camera cropping capabilities");
+        goto ret_statement;
+    }
+
+    printf("\nCamera cropping:\n"
+       " Bounds:\t%dx%d+%d+%d\n"
+       " Default:\t%dx%d+%d+%d\n"
+       " Aspect:\t%d/%d\n",
+       cropcap.bounds.width,
+       cropcap.bounds.height,
+       cropcap.bounds.left,
+       cropcap.bounds.top,
+       cropcap.defrect.width,
+       cropcap.defrect.height,
+       cropcap.defrect.left,
+       cropcap.defrect.top,
+       cropcap.pixelaspect.numerator,
+       cropcap.pixelaspect.denominator);
 
 ret_statement:
     if (fd != -1) {
@@ -319,10 +321,12 @@ void camera_free(camera_device** device)
 
 void camera_get_frame_pointer(camera_device* dev, frame_t** frames_ptr, int* num_of_frames)
 {
-    if (dev != NULL) {
-        *frames_ptr = dev->frames;
-        *num_of_frames = dev->num_of_frames;
+    if (dev == NULL) {
+        return;
     }
+
+    *frames_ptr = dev->frames;
+    *num_of_frames = dev->num_of_frames;
 }
 
 int camera_acquire_frames(camera_device* dev)
@@ -330,8 +334,9 @@ int camera_acquire_frames(camera_device* dev)
     int ret = CAMERA_NO_ERROR;
     int i = 0;
     fd_set fds;
+
     if (!dev) {
-        return ret;
+        goto ret_statement;
     }
    
     // add buffers in the input queue

@@ -14,11 +14,11 @@
 #include <getopt.h>
 #include <errno.h>
 
-#define DEFAULT_VIDEO "/dev/video0"
-#define DEFAULT_FORMAT CAMERA_FMT_RGB32
-#define DEFAULT_NUM_OF_FRAMES 5
-#define DEFAULT_WIDTH 1024
-#define DEFAULT_HEIGHT 768
+static char* const DEFAULT_VIDEO = "/dev/video0";
+static const int DEFAULT_FORMAT = CAMERA_FMT_RGB32;
+static const int DEFAULT_NUM_OF_FRAMES = 5;
+static const int DEFAULT_WIDTH = 1024;
+static const int DEFAULT_HEIGHT = 768;
 
 static const char short_options[] = "d:hf:c:w:v:";
 static const struct option 
@@ -148,33 +148,36 @@ int main(int argc, char* argv[])
 
     dev = camera_new(&params);
 
-    if (dev != NULL) {
-        camera_get_frame_pointer(dev, &frames, &num_of_frames);
-
-        ret = camera_acquire_frames(dev);
-        if (ret != CAMERA_NO_ERROR) {
-            if (ret == CAMERA_ERR_DATA_CORRUPTED) {
-                fprintf(stderr, "Camera data might be corrupted\n");
-                exit(1);
-            } else if (ret == CAMERA_ERR_TIMEOUT) {
-                fprintf(stderr, "Camera acquisition timeout\n");
-                exit(1);
-            } else if (ret == CAMERA_ERR_MEMORY_HANDLE) {
-                fprintf(stderr, "Camera memory handling error\n");
-                exit(1);
-            }
-        }
-
-        for (i = 0; i < num_of_frames; i++) {
-            printf("Frame %d: %dx%d %zubytes\n", 
-                i, 
-                params.width, 
-                params.height, 
-                frames[i].length);
-        }
-        printf("\n");
-        camera_free(&dev);
+    if (dev == NULL) {
+        fprintf(stderr, "Cannot create the camera interface\n");
+        exit(1);
     }
+
+    camera_get_frame_pointer(dev, &frames, &num_of_frames);
+
+    ret = camera_acquire_frames(dev);
+    if (ret != CAMERA_NO_ERROR) {
+        if (ret == CAMERA_ERR_DATA_CORRUPTED) {
+            fprintf(stderr, "Camera data might be corrupted\n");
+            exit(1);
+        } else if (ret == CAMERA_ERR_TIMEOUT) {
+            fprintf(stderr, "Camera acquisition timeout\n");
+            exit(1);
+        } else if (ret == CAMERA_ERR_MEMORY_HANDLE) {
+            fprintf(stderr, "Camera memory handling error\n");
+            exit(1);
+        }
+    }
+
+    for (i = 0; i < num_of_frames; i++) {
+        printf("Frame %d: %dx%d %zubytes\n", 
+            i, 
+            params.width, 
+            params.height, 
+            frames[i].length);
+    }
+    printf("\n");
+    camera_free(&dev);
 
     return 0;
 }
