@@ -1,6 +1,8 @@
 
 # Camera acquisition library
 
+[![Build Status](https://travis-ci.org/acerv/camera_acquisition.svg?branch=master)](https://travis-ci.org/acerv/camera_acquisition)
+
 ## Introduction
 This is a library that I wrote to play with CMOS cameras such as the Imaging Source DFK72BUC02 that I own.
 For now, the program only supports Linux (using Video4Linux library and mmap method), but in the future the goal is to port
