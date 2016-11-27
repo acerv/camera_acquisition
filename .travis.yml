@@ -1,0 +1,19 @@
+language: c
+sudo: required
+distro: trusty
+
+addons:
+  apt:
+    packages:
+    - make
+    - build-essential
+    - linux-headers-generic
+
+compiler:
+  - gcc
+
+script:
+  - make 
+  - ./tester --help
+  - make clean
+
